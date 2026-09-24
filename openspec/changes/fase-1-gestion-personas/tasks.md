@@ -15,9 +15,9 @@
 
 ## 4. Lógica de negocio
 
-- [ ] 4.1 Implementar `src/GestorPersonas.cs` con `AltaPersona` (IdPersona autogenerado e incremental) y su almacenamiento interno en memoria, y verificar que `dotnet build src/AgendaProfesional.csproj` compila sin errores.
-- [ ] 4.2 Implementar `Listar` (ordenado por Apellidos y Nombre), `BuscarPorId` y `BuscarPorTexto` (coincidencia parcial sin distinguir mayúsculas/minúsculas), y verificar comportamiento en la demo del grupo 6.
-- [ ] 4.3 Implementar `Modificar` y `Eliminar` (con confirmación en la capa de consola), y verificar comportamiento en la demo del grupo 6.
+- [x] 4.1 Implementar `src/GestorPersonas.cs` con `AltaPersona` (IdPersona autogenerado e incremental) y su almacenamiento interno en memoria, y verificar que `dotnet build src/AgendaProfesional.csproj` compila sin errores.
+- [x] 4.2 Implementar `Listar` (ordenado por Apellidos y Nombre), `BuscarPorId` y `BuscarPorTexto` (coincidencia parcial sin distinguir mayúsculas/minúsculas), y verificar comportamiento en la demo del grupo 6.
+- [x] 4.3 Implementar `Modificar` y `Eliminar` (con confirmación en la capa de consola), y verificar comportamiento en la demo del grupo 6.
 
 ## 5. Interfaz de consola
 
@@ -29,4 +29,4 @@
 ## 6. Verificación y entrega
 
 - [x] 6.1 Ejecutar la demo completa del criterio de aceptación de la Fase 1 (un alta, una búsqueda, una modificación y una baja con sus confirmaciones y validaciones) y verificar que todos los escenarios de `specs/personas/spec.md` se cumplen.
-- [ ] 6.2 Crear la etiqueta git `fase-1` sobre el estado verificado y comprobar que el proyecto sigue compilando y arranca desde ese tag (NFR-003).
+- [x] 6.2 Crear la etiqueta git `fase-1` sobre el estado verificado y comprobar que el proyecto sigue compilando y arranca desde ese tag (NFR-003).
