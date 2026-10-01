@@ -28,26 +28,23 @@ public class GestorPersonas
             .ToList();
     }
 
-    public Persona? BuscarPorId(int id)
+    public List<Persona> BuscarPorNombre(string nombre, string apellidos)
     {
-        return _personas.FirstOrDefault(p => p.IdPersona == id);
-    }
+        string buscaNombre = (nombre ?? string.Empty).Trim();
+        string buscaApellidos = (apellidos ?? string.Empty).Trim();
 
-    public List<Persona> BuscarPorTexto(string texto)
-    {
-        string busqueda = (texto ?? string.Empty).Trim();
-        if (busqueda.Length == 0)
+        if (buscaNombre.Length == 0 || buscaApellidos.Length == 0)
         {
             return new List<Persona>();
         }
 
         return _personas
-            .Where(p => p.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
-                     || p.Apellidos.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+            .Where(p => Validaciones.Coincide(p.Nombre, buscaNombre)
+                     && Validaciones.Coincide(p.Apellidos, buscaApellidos))
             .ToList();
     }
 
-    public bool Modificar(int id, string nombre, string apellidos, string telefono, string correo, string empresaAsignada)
+    public bool Modificar(int id, string? nombre, string? apellidos, string? telefono, string? correo, string? empresaAsignada)
     {
         Persona? persona = BuscarPorId(id);
         if (persona == null)
@@ -55,11 +52,11 @@ public class GestorPersonas
             return false;
         }
 
-        persona.Nombre = (nombre ?? string.Empty).Trim();
-        persona.Apellidos = (apellidos ?? string.Empty).Trim();
-        persona.Telefono = (telefono ?? string.Empty).Trim();
-        persona.Correo = (correo ?? string.Empty).Trim();
-        persona.EmpresaAsignada = (empresaAsignada ?? string.Empty).Trim();
+        persona.Nombre = ValorIndicadoONuevo(nombre, persona.Nombre);
+        persona.Apellidos = ValorIndicadoONuevo(apellidos, persona.Apellidos);
+        persona.Telefono = ValorIndicadoONuevo(telefono, persona.Telefono);
+        persona.Correo = ValorIndicadoONuevo(correo, persona.Correo);
+        persona.EmpresaAsignada = ValorIndicadoONuevo(empresaAsignada, persona.EmpresaAsignada);
         return true;
     }
 
@@ -73,5 +70,15 @@ public class GestorPersonas
 
         _personas.Remove(persona);
         return true;
+    }
+
+    private Persona? BuscarPorId(int id)
+    {
+        return _personas.FirstOrDefault(p => p.IdPersona == id);
+    }
+
+    private static string ValorIndicadoONuevo(string? valorIndicado, string valorActual)
+    {
+        return string.IsNullOrWhiteSpace(valorIndicado) ? valorActual : valorIndicado.Trim();
     }
 }
