@@ -71,5 +71,5 @@
 - [x] 5.2 Redactar el guion de demostración (inputs exactos a teclear) que cubre el
       recorrido del paso 5.1 y los flujos de personas; verificar que el guion se puede
       seguir tal cual descrito.
-- [ ] 5.3 Verificar con `git tag` que `fase-1` sigue existiendo y crear la etiqueta
+- [x] 5.3 Verificar con `git tag` que `fase-1` sigue existiendo y crear la etiqueta
       `fase-2` sobre el commit final de la funcionalidad.
