@@ -19,6 +19,11 @@ public static class Validaciones
         $@"^\+\d{{{MinimoDigitosPrefijo},{MaximoDigitosPrefijo}}} ?\d{{{MinimoDigitosNumero},{MaximoDigitosNumero}}}$",
         RegexOptions.CultureInvariant);
 
+    // CIF: letra o dígito inicial, 7 dígitos y dígito o letra de control.
+    private static readonly Regex FormatoCif = new(
+        @"^[A-Za-z0-9]\d{7}[A-Za-z0-9]$",
+        RegexOptions.CultureInvariant);
+
     /// Se activa al agotarse la entrada (Ctrl+Z o consola cerrada) para no dejar bucles colgados.
     public static bool EntradaAgotada { get; private set; }
 
@@ -125,6 +130,20 @@ public static class Validaciones
             ? null
             : $"Teléfono no válido: el prefijo necesita entre {MinimoDigitosPrefijo} y {MaximoDigitosPrefijo} dígitos " +
               $"y el número entre {MinimoDigitosNumero} y {MaximoDigitosNumero}.";
+    }
+
+    public static string? ValidarCif(string cif)
+    {
+        if (string.IsNullOrWhiteSpace(cif))
+        {
+            return MensajeObligatorio;
+        }
+
+        string valor = cif.Trim();
+
+        return FormatoCif.IsMatch(valor)
+            ? null
+            : "CIF no válido: debe tener una letra o dígito inicial, 7 dígitos y un dígito o letra de control.";
     }
 
     public static string? LeerCampoObligatorio(string mensaje, Func<string, string?> validar)
@@ -266,6 +285,47 @@ public static class Validaciones
         }
 
         return false;
+    }
+
+    /// Confirmación que distingue 'cancelar' (vuelve al menú principal) de responder 'n'
+    /// (la operación termina y el llamante decide a qué menú volver).
+    public static Confirmacion ConfirmarCancelable(string mensaje)
+    {
+        while (!EntradaAgotada)
+        {
+            string? linea = LeerLinea(mensaje);
+
+            if (EsCancelacion(linea))
+            {
+                return Confirmacion.Cancelado;
+            }
+
+            string respuesta = (linea ?? string.Empty).Trim();
+
+            if (respuesta.Equals("s", StringComparison.OrdinalIgnoreCase))
+            {
+                return Confirmacion.Si;
+            }
+
+            if (respuesta.Equals("n", StringComparison.OrdinalIgnoreCase))
+            {
+                return Confirmacion.No;
+            }
+
+            if (!EntradaAgotada)
+            {
+                Console.WriteLine($"Responde s (sí) o n (no), o escribe '{PalabraCancelar}' para volver al menú principal.");
+            }
+        }
+
+        return Confirmacion.No;
+    }
+
+    public enum Confirmacion
+    {
+        Si,
+        No,
+        Cancelado
     }
 
     private static string? LeerLinea(string mensaje)
