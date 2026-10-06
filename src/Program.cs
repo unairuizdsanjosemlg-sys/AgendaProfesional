@@ -1,21 +1,19 @@
 ﻿using AgendaProfesional;
 
-GestorPersonas gestor = new();
+GestorPersonas gestorPersonas = new();
+GestorEmpresas gestorEmpresas = new();
 bool salir = false;
 
 while (!salir)
 {
     Console.WriteLine();
     Console.WriteLine("=== AGENDA DE CONSULTORÍA ===");
-    Console.WriteLine("1. Alta de persona");
-    Console.WriteLine("2. Listado");
-    Console.WriteLine("3. Búsqueda");
-    Console.WriteLine("4. Modificar");
-    Console.WriteLine("5. Baja");
-    Console.WriteLine("6. Salir");
+    Console.WriteLine("1. Personas");
+    Console.WriteLine("2. Empresas");
+    Console.WriteLine("3. Salir");
     Console.WriteLine();
 
-    int opcion = Validaciones.LeerEntero("Elige una opción (1-6): ", 1, 6);
+    int opcion = Validaciones.LeerEntero("Elige una opción (1-3): ", 1, 3);
 
     if (Validaciones.EntradaAgotada)
     {
@@ -26,27 +24,62 @@ while (!salir)
     switch (opcion)
     {
         case 1:
-            AltaPersona(gestor);
+            MenuPersonas(gestorPersonas);
             break;
         case 2:
-            Listado(gestor);
+            MenuEmpresas.Ejecutar(gestorEmpresas);
             break;
         case 3:
-            Busqueda(gestor);
-            break;
-        case 4:
-            Modificar(gestor);
-            break;
-        case 5:
-            Baja(gestor);
-            break;
-        case 6:
             salir = true;
             Console.WriteLine("Hasta pronto.");
             break;
         default:
             Console.WriteLine("Opción inexistente. Inténtalo de nuevo.");
             break;
+    }
+}
+
+static void MenuPersonas(GestorPersonas gestor)
+{
+    while (!Validaciones.EntradaAgotada)
+    {
+        Console.WriteLine();
+        Console.WriteLine("=== GESTIÓN DE PERSONAS ===");
+        Console.WriteLine("1. Alta de persona");
+        Console.WriteLine("2. Listado");
+        Console.WriteLine("3. Búsqueda");
+        Console.WriteLine("4. Modificar");
+        Console.WriteLine("5. Baja");
+        Console.WriteLine("6. Volver al menú principal");
+        Console.WriteLine();
+
+        int opcion = Validaciones.LeerEntero("Elige una opción (1-6): ", 1, 6);
+
+        if (Validaciones.EntradaAgotada)
+        {
+            return;
+        }
+
+        switch (opcion)
+        {
+            case 1:
+                if (!AltaPersona(gestor)) return;
+                break;
+            case 2:
+                if (!Listado(gestor)) return;
+                break;
+            case 3:
+                if (!Busqueda(gestor)) return;
+                break;
+            case 4:
+                if (!Modificar(gestor)) return;
+                break;
+            case 5:
+                if (!Baja(gestor)) return;
+                break;
+            case 6:
+                return;
+        }
     }
 }
 
@@ -93,7 +126,7 @@ static bool LeerCamposPersona(bool esModificacion, out PersonaDatos datos)
     return true;
 }
 
-static void AltaPersona(GestorPersonas gestor)
+static bool AltaPersona(GestorPersonas gestor)
 {
     Console.WriteLine();
     Console.WriteLine("--- ALTA DE PERSONA ---");
@@ -103,14 +136,15 @@ static void AltaPersona(GestorPersonas gestor)
     if (!LeerCamposPersona(esModificacion: false, out PersonaDatos datos))
     {
         Console.WriteLine("Alta cancelada.");
-        return;
+        return false;
     }
 
     Persona persona = gestor.AltaPersona(datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
     Console.WriteLine($"Alta confirmada. Id asignado: {persona.IdPersona}.");
+    return true;
 }
 
-static void Listado(GestorPersonas gestor)
+static bool Listado(GestorPersonas gestor)
 {
     Console.WriteLine();
     Console.WriteLine("--- LISTADO DE PERSONAS ---");
@@ -119,13 +153,15 @@ static void Listado(GestorPersonas gestor)
     if (personas.Count == 0)
     {
         Console.WriteLine("No hay personas registradas en la agenda.");
-        return;
+        return true;
     }
 
     foreach (Persona persona in personas)
     {
         Console.WriteLine(PersonaTexto(persona));
     }
+
+    return true;
 }
 
 static List<Persona>? PedirCoincidencias(GestorPersonas gestor)
@@ -145,11 +181,14 @@ static List<Persona>? PedirCoincidencias(GestorPersonas gestor)
     return gestor.BuscarPorNombre(nombre, apellidos);
 }
 
-static Persona? LocalizarPersona(GestorPersonas gestor)
+static Persona? LocalizarPersona(GestorPersonas gestor, out bool cancelado)
 {
+    cancelado = false;
+
     List<Persona>? coincidencias = PedirCoincidencias(gestor);
     if (coincidencias == null)
     {
+        cancelado = true;
         Console.WriteLine("Operación cancelada.");
         return null;
     }
@@ -176,6 +215,7 @@ static Persona? LocalizarPersona(GestorPersonas gestor)
 
     if (numero == null)
     {
+        cancelado = true;
         Console.WriteLine("Operación cancelada.");
         return null;
     }
@@ -183,7 +223,7 @@ static Persona? LocalizarPersona(GestorPersonas gestor)
     return coincidencias[numero.Value - 1];
 }
 
-static void Busqueda(GestorPersonas gestor)
+static bool Busqueda(GestorPersonas gestor)
 {
     Console.WriteLine();
     Console.WriteLine("--- BÚSQUEDA DE PERSONAS ---");
@@ -195,13 +235,13 @@ static void Busqueda(GestorPersonas gestor)
     if (resultados == null)
     {
         Console.WriteLine("Búsqueda cancelada.");
-        return;
+        return false;
     }
 
     if (resultados.Count == 0)
     {
         Console.WriteLine("No hay coincidencias para la búsqueda.");
-        return;
+        return true;
     }
 
     Console.WriteLine($"Coincidencias encontradas ({resultados.Count}):");
@@ -209,17 +249,24 @@ static void Busqueda(GestorPersonas gestor)
     {
         Console.WriteLine(PersonaTexto(persona));
     }
+
+    return true;
 }
 
-static void Modificar(GestorPersonas gestor)
+static bool Modificar(GestorPersonas gestor)
 {
     Console.WriteLine();
     Console.WriteLine("--- MODIFICAR PERSONA ---");
 
-    Persona? persona = LocalizarPersona(gestor);
+    Persona? persona = LocalizarPersona(gestor, out bool cancelado);
+    if (cancelado)
+    {
+        return false;
+    }
+
     if (persona == null)
     {
-        return;
+        return true;
     }
 
     Console.WriteLine("Datos actuales:");
@@ -231,29 +278,35 @@ static void Modificar(GestorPersonas gestor)
     if (!LeerCamposPersona(esModificacion: true, out PersonaDatos datos))
     {
         Console.WriteLine("Modificación cancelada.");
-        return;
+        return false;
     }
 
     if (datos.SinCambios)
     {
         Console.WriteLine("No se ha introducido ningún cambio.");
-        return;
+        return true;
     }
 
     Console.WriteLine();
     Console.WriteLine("Resumen de cambios:");
     MostrarResumen(persona, datos);
 
-    if (!Validaciones.Confirmar("¿Guardar los cambios? (s/n): "))
+    switch (Validaciones.ConfirmarCancelable("¿Guardar los cambios? (s/n): "))
     {
-        Console.WriteLine("Modificación cancelada.");
-        return;
+        case Validaciones.Confirmacion.Si:
+            bool modificado = gestor.Modificar(
+                persona.IdPersona, datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
+            Console.WriteLine(modificado ? "Persona modificada correctamente." : "No se pudo modificar la persona.");
+            return true;
+
+        case Validaciones.Confirmacion.No:
+            Console.WriteLine("Modificación cancelada.");
+            return true;
+
+        default:
+            Console.WriteLine("Modificación cancelada.");
+            return false;
     }
-
-    bool modificado = gestor.Modificar(
-        persona.IdPersona, datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
-
-    Console.WriteLine(modificado ? "Persona modificada correctamente." : "No se pudo modificar la persona.");
 }
 
 static void MostrarResumen(Persona persona, PersonaDatos datos)
@@ -276,28 +329,40 @@ static void MostrarResumen(Persona persona, PersonaDatos datos)
     }
 }
 
-static void Baja(GestorPersonas gestor)
+static bool Baja(GestorPersonas gestor)
 {
     Console.WriteLine();
     Console.WriteLine("--- BAJA DE PERSONA ---");
 
-    Persona? persona = LocalizarPersona(gestor);
+    Persona? persona = LocalizarPersona(gestor, out bool cancelado);
+    if (cancelado)
+    {
+        return false;
+    }
+
     if (persona == null)
     {
-        return;
+        return true;
     }
 
     Console.WriteLine("Registro afectado:");
     Console.WriteLine(PersonaTexto(persona));
 
-    if (!Validaciones.Confirmar("¿Eliminar definitivamente? (s/n): "))
+    switch (Validaciones.ConfirmarCancelable("¿Eliminar definitivamente? (s/n): "))
     {
-        Console.WriteLine("Baja cancelada.");
-        return;
-    }
+        case Validaciones.Confirmacion.Si:
+            gestor.Eliminar(persona.IdPersona);
+            Console.WriteLine("Persona eliminada.");
+            return true;
 
-    gestor.Eliminar(persona.IdPersona);
-    Console.WriteLine("Persona eliminada.");
+        case Validaciones.Confirmacion.No:
+            Console.WriteLine("Baja cancelada.");
+            return true;
+
+        default:
+            Console.WriteLine("Baja cancelada.");
+            return false;
+    }
 }
 
 readonly record struct PersonaDatos(
