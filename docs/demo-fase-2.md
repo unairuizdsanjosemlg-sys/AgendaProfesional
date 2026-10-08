@@ -17,6 +17,10 @@ Convenciones del guion:
 - `⟨vacío⟩` significa pulsar <kbd>Enter</kbd> sin escribir nada.
 - Las líneas se leen en orden; el prompt indicado es el que espera esa entrada.
 
+> Nota de la relación persona-empresa: desde la fase 3, el campo "Empresa asignada"
+> del alta/modificación de persona es **opcional**; si se rellena, debe corresponder
+> a una empresa ya registrada (si no, avisa y repregunta solo ese campo).
+
 ## A. Empresas
 
 ### A1. Entradas inválidas del menú principal y del submenu
@@ -25,14 +29,14 @@ Convenciones del guion:
 |---|---|---|
 | `Elige una opción (1-3):` | `xyz` | Aviso "Entrada no válida: introduce un número entre 1 y 3." y repregunta |
 | `Elige una opción (1-3):` | `2` | Abre `=== GESTIÓN DE EMPRESAS ===` |
-| `Elige una opción (1-6):` | `x` | Aviso "Entrada no válida: introduce un número entre 1 y 6." y repregunta |
-| `Elige una opción (1-6):` | `9` | Mismo aviso y repregunta |
+| `Elige una opción (1-7):` | `x` | Aviso "Entrada no válida: introduce un número entre 1 y 7." y repregunta |
+| `Elige una opción (1-7):` | `9` | Mismo aviso y repregunta |
 
 ### A2. Alta válida con errores de campo (solo repregunta el campo fallido)
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `1` | `--- ALTA DE EMPRESA ---` |
+| `Elige una opción (1-7):` | `1` | `--- ALTA DE EMPRESA ---` |
 | `Nombre comercial:` | `Consultora Delta` | Avanza al CIF |
 | `CIF (letra o dígito + 7 dígitos + control):` | `B12345678` | Avanza al teléfono |
 | `Teléfono ...:` | `600111222` | Aviso (empieza por `+`) y repregunta solo el teléfono |
@@ -46,7 +50,7 @@ Convenciones del guion:
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `1` | `--- ALTA DE EMPRESA ---` |
+| `Elige una opción (1-7):` | `1` | `--- ALTA DE EMPRESA ---` |
 | `Nombre comercial:` | `Consultora Delta` | (permitido: los nombres duplicados se aceptan) |
 | `CIF ...:` | `B87654321` | |
 | `Teléfono ...:` | `+34 611222333` | |
@@ -58,7 +62,7 @@ Convenciones del guion:
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `1` | Alta |
+| `Elige una opción (1-7):` | `1` | Alta |
 | `Nombre comercial:` | `Otra Empresa` | |
 | `CIF ...:` | `B12345678` | "Ese CIF ya está registrado por otra empresa." y repregunta solo el CIF |
 | `CIF ...:` | `cancelar` | "Alta cancelada." y vuelve al **menú principal** (no cierra) |
@@ -68,19 +72,19 @@ Convenciones del guion:
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `2` | Empresas |
-| `Elige una opción (1-6):` | `2` | Listado con cabecera alineada y las 2 empresas (orden por nombre comercial) |
-| `Elige una opción (1-6):` | `3` | `--- BÚSQUEDA DE EMPRESAS ---` |
+| `Elige una opción (1-7):` | `2` | Listado con cabecera alineada y las 2 empresas (orden por nombre comercial) |
+| `Elige una opción (1-7):` | `3` | `--- BÚSQUEDA DE EMPRESAS ---` |
 | `Nombre comercial o CIF:` | `consultora delta` | 2 coincidencias (subcadena sin mayúsculas) |
-| `Elige una opción (1-6):` | `3` | Búsqueda |
+| `Elige una opción (1-7):` | `3` | Búsqueda |
 | `Nombre comercial o CIF:` | `b87654321` | 1 coincidencia (CIF completo en minúsculas) |
-| `Elige una opción (1-6):` | `3` | Búsqueda |
+| `Elige una opción (1-7):` | `3` | Búsqueda |
 | `Nombre comercial o CIF:` | `zzzzz` | "No hay coincidencias para la búsqueda." sin error |
 
 ### A6. Modificar: homónimos, selección fuera de rango y cambio confirmado
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `4` | `--- MODIFICAR EMPRESA ---` |
+| `Elige una opción (1-7):` | `4` | `--- MODIFICAR EMPRESA ---` |
 | `Nombre comercial o CIF:` | `consultora delta` | Lista numerada con las 2 candidatas |
 | `Número de la empresa (1-2):` | `5` | Aviso fuera de rango y repregunta |
 | `Número de la empresa (1-2):` | `2` | Muestra los datos actuales de la empresa 2 |
@@ -95,7 +99,7 @@ Convenciones del guion:
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `4` | Modificar |
+| `Elige una opción (1-7):` | `4` | Modificar |
 | `Nombre comercial o CIF:` | `B12345678` | Coincidencia única: datos actuales directamente |
 | `Nombre comercial:` | `⟨vacío⟩` | |
 | `CIF ...:` | `⟨vacío⟩` | |
@@ -108,7 +112,7 @@ Convenciones del guion:
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `4` | Modificar |
+| `Elige una opción (1-7):` | `4` | Modificar |
 | `Nombre comercial o CIF:` | `B12345678` | Datos actuales |
 | los 5 campos | `⟨vacío⟩` ×5 | "No se ha introducido ningún cambio." (sin resumen ni confirmación) |
 
@@ -116,7 +120,7 @@ Convenciones del guion:
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
-| `Elige una opción (1-6):` | `4` | Modificar |
+| `Elige una opción (1-7):` | `4` | Modificar |
 | `Nombre comercial o CIF:` | `consultora delta` | Lista numerada con las 2 candidatas |
 | `Número de la empresa (1-2):` | `cancelar` | "Operación cancelada." y vuelve al **menú principal** |
 
@@ -125,7 +129,7 @@ Convenciones del guion:
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `2` | Empresas |
-| `Elige una opción (1-6):` | `1` | Alta |
+| `Elige una opción (1-7):` | `1` | Alta |
 | `Nombre comercial:` | `Prueba Cancel` | |
 | `CIF ...:` | `A12345678` | |
 | `Teléfono ...:` | `+34 622333444` | |
@@ -138,16 +142,16 @@ Convenciones del guion:
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `2` | Empresas |
-| `Elige una opción (1-6):` | `5` | `--- BAJA DE EMPRESA ---` |
+| `Elige una opción (1-7):` | `5` | `--- BAJA DE EMPRESA ---` |
 | `Nombre comercial o CIF:` | `consultora delta` | Lista numerada con las 2 candidatas |
 | `Número de la empresa (1-2):` | `1` | Registro afectado (empresa 1, Id 1) |
 | `¿Eliminar definitivamente? (s/n):` | `n` | "Baja cancelada." y **sigue en el submenu** |
-| `Elige una opción (1-6):` | `5` | Baja |
+| `Elige una opción (1-7):` | `5` | Baja |
 | `Nombre comercial o CIF:` | `B12345678` | Registro afectado |
 | `¿Eliminar definitivamente? (s/n):` | `s` | "Empresa eliminada." |
-| `Elige una opción (1-6):` | `5` | Baja |
+| `Elige una opción (1-7):` | `5` | Baja |
 | `Nombre comercial o CIF:` | `zzzzz` | "No se ha encontrado ninguna empresa con ese nombre o CIF." |
-| `Elige una opción (1-6):` | `5` | Baja |
+| `Elige una opción (1-7):` | `5` | Baja |
 | `Nombre comercial o CIF:` | `cancelar` | "Operación cancelada." y vuelve al **menú principal** |
 
 ### A12. Listado final y vuelta al menú principal
@@ -155,55 +159,60 @@ Convenciones del guion:
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `2` | Empresas |
-| `Elige una opción (1-6):` | `2` | Listado con **1 sola fila**: Consultora Delta (B87654321) con el correo `nuevocorreo@delta.com` |
-| `Elige una opción (1-6):` | `6` | Vuelve al menú principal sin cerrar la aplicación |
+| `Elige una opción (1-7):` | `2` | Listado con **1 sola fila**: Consultora Delta (B87654321) con el correo `nuevocorreo@delta.com` |
+| `Elige una opción (1-7):` | `7` | Vuelve al menú principal sin cerrar la aplicación |
 
-## B. Personas (regresión de la Fase 1)
+## B. Personas (regresión de la Fase 1 con empresa opcional)
+
+> El campo "Empresa asignada" ya no es texto libre: en el alta y en la modificación,
+> un nombre que no corresponda a ninguna empresa registrada avisa y repregunta solo ese
+> campo; dejarlo `⟨vacío⟩` equivale a "sin empresa" en el alta y a "conservar" al modificar.
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `1` | `=== GESTIÓN DE PERSONAS ===` |
-| `Elige una opción (1-6):` | `1` | `--- ALTA DE PERSONA ---` |
+| `Elige una opción (1-8):` | `1` | `--- ALTA DE PERSONA ---` |
 | `Nombre:` | `Ana` | |
 | `Apellidos:` | `García` | |
 | `Teléfono ...:` | `600111222` | Aviso y repregunta solo el teléfono |
 | `Teléfono ...:` | `+34 600111222` | |
 | `Correo:` | `ana@correo.es` | |
-| `Empresa asignada:` | `Delta Consulting` | "Alta confirmada. Id asignado: 1." |
-| `Elige una opción (1-6):` | `2` | Listado con la persona |
-| `Elige una opción (1-6):` | `3` | `--- BÚSQUEDA DE PERSONAS ---` |
+| `Empresa asignada:` | `Delta Consulting` | "No se ha encontrado ninguna empresa con ese nombre." y repregunta solo ese campo |
+| `Empresa asignada:` | `⟨vacío⟩` | Alta sin empresa: "Alta confirmada. Id asignado: 1." |
+| `Elige una opción (1-8):` | `2` | Listado con la persona (muestra "Empresa: Sin empresa") |
+| `Elige una opción (1-8):` | `3` | `--- BÚSQUEDA DE PERSONAS ---` |
 | `Nombre:` | `an` | |
 | `Apellidos:` | `gar` | 1 coincidencia (coincidencia parcial) |
-| `Elige una opción (1-6):` | `4` | Modificar |
+| `Elige una opción (1-8):` | `4` | Modificar |
 | `Nombre:` | `ana` | |
 | `Apellidos:` | `garcía` | Datos actuales |
 | los 5 campos | `⟨vacío⟩` ×5 | "No se ha introducido ningún cambio." |
-| `Elige una opción (1-6):` | `4` | Modificar |
+| `Elige una opción (1-8):` | `4` | Modificar |
 | `Nombre:` | `ana` | |
 | `Apellidos:` | `garcía` | Datos actuales |
 | `Nombre:` | `⟨vacío⟩` | Conserva |
 | `Apellidos:` | `⟨vacío⟩` | Conserva |
 | `Teléfono ...:` | `⟨vacío⟩` | Conserva |
-| `Correo:` | `⟨vacío⟩` | Conserva |
-| `Empresa asignada:` | `Delta SL` | Resumen: `Empresa asignada: Delta Consulting -> Delta SL` |
+| `Correo:` | `ana2@correo.es` | Resumen: `Correo: ana@correo.es -> ana2@correo.es` |
+| `Empresa asignada:` | `⟨vacío⟩` | Conserva (en blanco no toca la relación) |
 | `¿Guardar los cambios? (s/n):` | `s` | "Persona modificada correctamente." |
-| `Elige una opción (1-6):` | `5` | Baja |
+| `Elige una opción (1-8):` | `5` | Baja |
 | `Nombre:` | `ana` | |
 | `Apellidos:` | `garcía` | Registro afectado |
 | `¿Eliminar definitivamente? (s/n):` | `n` | "Baja cancelada." y sigue en el submenu |
-| `Elige una opción (1-6):` | `5` | Baja |
+| `Elige una opción (1-8):` | `5` | Baja |
 | `Nombre:` | `ana` | |
 | `Apellidos:` | `garcía` | Registro afectado |
 | `¿Eliminar definitivamente? (s/n):` | `s` | "Persona eliminada." |
-| `Elige una opción (1-6):` | `2` | "No hay personas registradas en la agenda." |
-| `Elige una opción (1-6):` | `6` | Vuelve al menú principal sin cerrar |
+| `Elige una opción (1-8):` | `2` | "No hay personas registradas en la agenda." |
+| `Elige una opción (1-8):` | `8` | Vuelve al menú principal sin cerrar |
 
 ## C. Salida
 
 | Prompt | Entrada | Resultado esperado |
 |---|---|---|
 | `Elige una opción (1-3):` | `1` | Abre Personas |
-| `Elige una opción (1-6):` | `1` | Alta de persona |
+| `Elige una opción (1-8):` | `1` | Alta de persona |
 | `Nombre:` | `cancelar` | "Alta cancelada." y vuelve al menú principal |
 | `Elige una opción (1-3):` | `9` | Aviso y repregunta |
 | `Elige una opción (1-3):` | `aaa` | Aviso y repregunta |

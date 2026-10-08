@@ -91,7 +91,7 @@ public class GestorEmpresas
             && (idExcluido == null || e.IdEmpresa != idExcluido.Value));
     }
 
-    private Empresa? BuscarPorId(int id)
+    public Empresa? BuscarPorId(int id)
     {
         return _empresas.FirstOrDefault(e => e.IdEmpresa == id);
     }

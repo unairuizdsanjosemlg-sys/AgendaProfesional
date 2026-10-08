@@ -4,7 +4,7 @@ public static class MenuEmpresas
 {
     // Cada operación devuelve true para seguir en el submenu y false cuando
     // 'cancelar' obliga a volver al menú principal.
-    public static void Ejecutar(GestorEmpresas gestor)
+    public static void Ejecutar(GestorEmpresas gestor, GestorPersonas gestorPersonas, GestorRelaciones gestorRelaciones)
     {
         while (!Validaciones.EntradaAgotada)
         {
@@ -15,10 +15,11 @@ public static class MenuEmpresas
             Console.WriteLine("3. Búsqueda");
             Console.WriteLine("4. Modificar");
             Console.WriteLine("5. Baja");
-            Console.WriteLine("6. Volver al menú principal");
+            Console.WriteLine("6. Ver personas de la empresa");
+            Console.WriteLine("7. Volver al menú principal");
             Console.WriteLine();
 
-            int opcion = Validaciones.LeerEntero("Elige una opción (1-6): ", 1, 6);
+            int opcion = Validaciones.LeerEntero("Elige una opción (1-7): ", 1, 7);
 
             if (Validaciones.EntradaAgotada)
             {
@@ -40,9 +41,12 @@ public static class MenuEmpresas
                     if (!Modificar(gestor)) return;
                     break;
                 case 5:
-                    if (!Baja(gestor)) return;
+                    if (!Baja(gestor, gestorPersonas, gestorRelaciones)) return;
                     break;
                 case 6:
+                    if (!VerPersonas(gestor, gestorPersonas, gestorRelaciones)) return;
+                    break;
+                case 7:
                     return;
             }
         }
@@ -174,7 +178,7 @@ public static class MenuEmpresas
         Console.WriteLine($"Coincidencias encontradas ({resultados.Count}):");
         foreach (Empresa empresa in resultados)
         {
-            Console.WriteLine(EmpresaTexto(empresa));
+            Console.WriteLine(Presentacion.EmpresaTexto(empresa));
         }
 
         return true;
@@ -198,7 +202,7 @@ public static class MenuEmpresas
         }
 
         Console.WriteLine("Datos actuales:");
-        Console.WriteLine(EmpresaTexto(empresa));
+        Console.WriteLine(Presentacion.EmpresaTexto(empresa));
         Console.WriteLine($"Escribe '{Validaciones.PalabraCancelar}' para volver al menú principal; " +
                           "un campo en blanco conserva su valor actual.");
         Console.WriteLine();
@@ -249,7 +253,7 @@ public static class MenuEmpresas
 
         Console.WriteLine();
         Console.WriteLine("Empresa afectada:");
-        Console.WriteLine(EmpresaTexto(empresa));
+        Console.WriteLine(Presentacion.EmpresaTexto(empresa));
         Console.WriteLine("Resumen de cambios:");
         MostrarResumen(empresa, nombreComercial, cif, telefono, correo, direccion);
 
@@ -273,7 +277,7 @@ public static class MenuEmpresas
         }
     }
 
-    private static bool Baja(GestorEmpresas gestor)
+    private static bool Baja(GestorEmpresas gestor, GestorPersonas gestorPersonas, GestorRelaciones gestorRelaciones)
     {
         Console.WriteLine();
         Console.WriteLine("--- BAJA DE EMPRESA ---");
@@ -291,11 +295,18 @@ public static class MenuEmpresas
         }
 
         Console.WriteLine("Registro afectado:");
-        Console.WriteLine(EmpresaTexto(empresa));
+        Console.WriteLine(Presentacion.EmpresaTexto(empresa));
 
         switch (Validaciones.ConfirmarCancelable("¿Eliminar definitivamente? (s/n): "))
         {
             case Validaciones.Confirmacion.Si:
+                int personasVinculadas = gestorRelaciones.PersonasDe(empresa.IdEmpresa).Count;
+
+                if (personasVinculadas > 0)
+                {
+                    return BajaConPlantilla(gestor, gestorPersonas, gestorRelaciones, empresa, personasVinculadas);
+                }
+
                 gestor.Eliminar(empresa.IdEmpresa);
                 Console.WriteLine("Empresa eliminada.");
                 return true;
@@ -308,6 +319,101 @@ public static class MenuEmpresas
                 Console.WriteLine("Baja cancelada.");
                 return false;
         }
+    }
+
+    private static bool BajaConPlantilla(GestorEmpresas gestor, GestorPersonas gestorPersonas,
+        GestorRelaciones gestorRelaciones, Empresa empresa, int personasVinculadas)
+    {
+        string textoPersonas = personasVinculadas == 1 ? "persona relacionada" : "personas relacionadas";
+
+        Console.WriteLine();
+        Console.WriteLine($"Esta empresa tiene {personasVinculadas} {textoPersonas}.");
+        Console.WriteLine("No se puede borrar una empresa con personas relacionadas.");
+        Console.WriteLine("Para poder borrarla, primero hay que desvincular a todas sus personas.");
+        Console.WriteLine("Elige una opción:");
+        Console.WriteLine("1. Cancelar el borrado");
+        Console.WriteLine("2. Desvincular a todas las personas para poder borrarla");
+        Console.WriteLine();
+
+        int? opcion = Validaciones.LeerNumeroCancelable("Elige una opción (1-2): ", 1, 2);
+        if (opcion == null)
+        {
+            Console.WriteLine("Borrado cancelado.");
+            return false;
+        }
+
+        if (opcion.Value == 1)
+        {
+            Console.WriteLine("Borrado cancelado. La empresa y sus relaciones se mantienen.");
+            return true;
+        }
+
+        switch (Validaciones.ConfirmarCancelable(
+            $"¿Desvincular a las {personasVinculadas} {textoPersonas} y borrar la empresa? (s/n): "))
+        {
+            case Validaciones.Confirmacion.Si:
+                foreach (int idPersona in gestorRelaciones.PersonasDe(empresa.IdEmpresa))
+                {
+                    Persona? persona = gestorPersonas.BuscarPorId(idPersona);
+                    if (persona != null)
+                    {
+                        persona.EmpresaAsignada = string.Empty;
+                    }
+                }
+
+                gestorRelaciones.DesvincularTodas(empresa.IdEmpresa);
+                gestor.Eliminar(empresa.IdEmpresa);
+                Console.WriteLine($"Empresa '{empresa.NombreComercial}' eliminada tras desvincular a sus {personasVinculadas} {textoPersonas}.");
+                return true;
+
+            case Validaciones.Confirmacion.No:
+                Console.WriteLine("Borrado cancelado. La empresa no se ha eliminado.");
+                return true;
+
+            default:
+                Console.WriteLine("Borrado cancelado.");
+                return false;
+        }
+    }
+
+    private static bool VerPersonas(GestorEmpresas gestor, GestorPersonas gestorPersonas, GestorRelaciones gestorRelaciones)
+    {
+        Console.WriteLine();
+        Console.WriteLine("--- PERSONAS DE LA EMPRESA ---");
+
+        Empresa? empresa = LocalizarEmpresa(gestor, out bool cancelado);
+        if (cancelado)
+        {
+            Console.WriteLine("Operación cancelada.");
+            return false;
+        }
+
+        if (empresa == null)
+        {
+            return true;
+        }
+
+        List<int> idsPlantilla = gestorRelaciones.PersonasDe(empresa.IdEmpresa);
+
+        Console.WriteLine($"Empresa: {Presentacion.EmpresaTexto(empresa)}");
+
+        if (idsPlantilla.Count == 0)
+        {
+            Console.WriteLine("Esta empresa no tiene personas asignadas.");
+            return true;
+        }
+
+        List<Persona> plantilla = gestorPersonas.Listar()
+            .Where(p => idsPlantilla.Contains(p.IdPersona))
+            .ToList();
+
+        Console.WriteLine($"Personas asociadas ({plantilla.Count}):");
+        foreach (Persona persona in plantilla)
+        {
+            Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestor));
+        }
+
+        return true;
     }
 
     private static Empresa? LocalizarEmpresa(GestorEmpresas gestor, out bool cancelado)
@@ -337,7 +443,7 @@ public static class MenuEmpresas
         Console.WriteLine("Hay varias empresas coincidentes. Elige una:");
         for (int i = 0; i < coincidencias.Count; i++)
         {
-            Console.WriteLine($"  {i + 1}. {EmpresaTexto(coincidencias[i])}");
+            Console.WriteLine($"  {i + 1}. {Presentacion.EmpresaTexto(coincidencias[i])}");
         }
 
         int? numero = Validaciones.LeerNumeroCancelable(
@@ -384,12 +490,5 @@ public static class MenuEmpresas
                 Console.WriteLine($"  {etiqueta}: {actual} -> {nuevo}");
             }
         }
-    }
-
-    private static string EmpresaTexto(Empresa empresa)
-    {
-        return $"Id {empresa.IdEmpresa} | {empresa.NombreComercial} | CIF: {empresa.CIF} | " +
-               $"Tlf: {empresa.Telefono} | Correo: {empresa.CorreoElectronico} | " +
-               $"Dirección: {empresa.Direccion}";
     }
 }

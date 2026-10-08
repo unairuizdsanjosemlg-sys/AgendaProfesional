@@ -72,7 +72,7 @@ public class GestorPersonas
         return true;
     }
 
-    private Persona? BuscarPorId(int id)
+    public Persona? BuscarPorId(int id)
     {
         return _personas.FirstOrDefault(p => p.IdPersona == id);
     }
