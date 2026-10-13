@@ -1,14 +1,16 @@
-using AgendaProfesional.Ayudas;
+using AgendaProfesional.UI.Ayudas;
+using AgendaProfesional.Models;
+using AgendaProfesional.Services;
+using AgendaProfesional.UI;
 
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public static class MenuEmpresas
 {
     public static ResultadoOperacion Ejecutar(
         Consola consola,
-        GestorEmpresas gestor,
-        GestorPersonas gestorPersonas,
-        GestorRelaciones gestorRelaciones)
+        EmpresaService empresaService,
+        PersonaService personaService)
     {
         while (!consola.EntradaAgotada)
         {
@@ -32,12 +34,12 @@ public static class MenuEmpresas
 
             ResultadoOperacion resultado = opcion switch
             {
-                1 => Alta(consola, gestor),
-                2 => Listado(consola, gestor),
-                3 => Busqueda(consola, gestor),
-                4 => Modificar(consola, gestor),
-                5 => Baja(consola, gestor, gestorPersonas, gestorRelaciones),
-                6 => VerPersonas(consola, gestor, gestorPersonas, gestorRelaciones),
+                1 => Alta(consola, empresaService),
+                2 => Listado(consola, empresaService),
+                3 => Busqueda(consola, empresaService),
+                4 => Modificar(consola, empresaService),
+                5 => Baja(consola, empresaService, personaService),
+                6 => VerPersonas(consola, empresaService, personaService),
                 7 => ResultadoOperacion.VolverAlMenuPrincipal,
                 _ => ResultadoOperacion.Continuar
             };
@@ -51,7 +53,7 @@ public static class MenuEmpresas
         return ResultadoOperacion.VolverAlMenuPrincipal;
     }
 
-    private static ResultadoOperacion Alta(Consola consola, GestorEmpresas gestor)
+    private static ResultadoOperacion Alta(Consola consola, EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- ALTA DE EMPRESA ---");
@@ -65,7 +67,7 @@ public static class MenuEmpresas
             return ResultadoOperacion.VolverAlMenuPrincipal;
         }
 
-        string? cif = LeerCif(consola, gestor, null);
+        string? cif = LeerCif(consola, empresaService, null);
         if (cif == null)
         {
             Console.WriteLine("Alta cancelada.");
@@ -106,7 +108,7 @@ public static class MenuEmpresas
         switch (consola.ConfirmarCancelable("¿Confirmar el alta? (s/n): "))
         {
             case Confirmacion.Si:
-                Empresa? empresa = gestor.AltaEmpresa(nombreComercial, cif, telefono, correo, direccion);
+                Empresa? empresa = empresaService.AltaEmpresa(nombreComercial, cif, telefono, correo, direccion);
                 if (empresa == null)
                 {
                     Console.WriteLine("No se pudo dar de alta: el CIF ya está registrado.");
@@ -126,12 +128,12 @@ public static class MenuEmpresas
         }
     }
 
-    private static string? LeerCif(Consola consola, GestorEmpresas gestor, int? idExcluido)
+    private static string? LeerCif(Consola consola, EmpresaService empresaService, int? idExcluido)
     {
         while (!consola.EntradaAgotada)
         {
             string? valor = consola.LeerCampoObligatorio("CIF (letra o dígito + 7 dígitos + control): ",
-                v => ValidarCifUnico(gestor, v, idExcluido));
+                v => ValidarCifUnico(empresaService, v, idExcluido));
 
             if (valor == null)
             {
@@ -145,7 +147,7 @@ public static class MenuEmpresas
                 continue;
             }
 
-            if (gestor.ExisteCif(valor, idExcluido))
+            if (empresaService.ExisteCif(valor, idExcluido))
             {
                 Console.WriteLine("Ese CIF ya está registrado por otra empresa.");
                 continue;
@@ -157,7 +159,7 @@ public static class MenuEmpresas
         return null;
     }
 
-    private static string? ValidarCifUnico(GestorEmpresas gestor, string valor, int? idExcluido)
+    private static string? ValidarCifUnico(EmpresaService empresaService, string valor, int? idExcluido)
     {
         string? error = Validaciones.ValidarCif(valor);
         if (error != null)
@@ -165,17 +167,17 @@ public static class MenuEmpresas
             return error;
         }
 
-        return gestor.ExisteCif(valor, idExcluido)
+        return empresaService.ExisteCif(valor, idExcluido)
             ? "Ese CIF ya está registrado por otra empresa."
             : null;
     }
 
-    private static ResultadoOperacion Listado(Consola consola, GestorEmpresas gestor)
+    private static ResultadoOperacion Listado(Consola consola, EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- LISTADO DE EMPRESAS ---");
 
-        List<Empresa> empresas = gestor.Listar();
+        List<Empresa> empresas = empresaService.ListarEmpresas();
         if (empresas.Count == 0)
         {
             Console.WriteLine("No hay empresas registradas en la agenda.");
@@ -195,7 +197,7 @@ public static class MenuEmpresas
         return ResultadoOperacion.Continuar;
     }
 
-    private static ResultadoOperacion Busqueda(Consola consola, GestorEmpresas gestor)
+    private static ResultadoOperacion Busqueda(Consola consola, EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- BÚSQUEDA DE EMPRESAS ---");
@@ -210,7 +212,7 @@ public static class MenuEmpresas
             return ResultadoOperacion.VolverAlMenuPrincipal;
         }
 
-        List<Empresa> resultados = gestor.BuscarPorTexto(texto);
+        List<Empresa> resultados = empresaService.BuscarEmpresasPorTexto(texto);
         if (resultados.Count == 0)
         {
             Console.WriteLine("No hay coincidencias para la búsqueda.");
@@ -226,7 +228,7 @@ public static class MenuEmpresas
         return ResultadoOperacion.Continuar;
     }
 
-    private static ResultadoOperacion Modificar(Consola consola, GestorEmpresas gestor)
+    private static ResultadoOperacion Modificar(Consola consola, EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- MODIFICAR EMPRESA ---");
@@ -234,7 +236,7 @@ public static class MenuEmpresas
         var resultadoLocalizar = LocalizarRegistro.Ejecutar(
             consola,
             "Nombre comercial o CIF: ",
-            t => gestor.BuscarPorTexto(t),
+            t => empresaService.BuscarEmpresasPorTexto(t),
             Presentacion.EmpresaTexto,
             "No se ha encontrado ninguna empresa con ese nombre o CIF.");
 
@@ -264,7 +266,7 @@ public static class MenuEmpresas
             return ResultadoOperacion.VolverAlMenuPrincipal;
         }
 
-        string? cif = LeerCifModificacion(consola, gestor, empresa.IdEmpresa);
+        string? cif = LeerCifModificacion(consola, empresaService, empresa.IdEmpresa);
         if (cif == null)
         {
             Console.WriteLine("Modificación cancelada.");
@@ -309,7 +311,7 @@ public static class MenuEmpresas
         switch (consola.ConfirmarCancelable("¿Guardar los cambios? (s/n): "))
         {
             case Confirmacion.Si:
-                bool modificado = gestor.Modificar(
+                bool modificado = empresaService.ModificarEmpresa(
                     empresa.IdEmpresa, nombreComercial, cif, telefono, correo, direccion);
                 Console.WriteLine(modificado
                     ? "Empresa modificada correctamente."
@@ -326,12 +328,12 @@ public static class MenuEmpresas
         }
     }
 
-    private static string? LeerCifModificacion(Consola consola, GestorEmpresas gestor, int idExcluido)
+    private static string? LeerCifModificacion(Consola consola, EmpresaService empresaService, int idExcluido)
     {
         while (!consola.EntradaAgotada)
         {
             string? valor = consola.LeerCampoModificacion("CIF: ",
-                v => ValidarCifUnico(gestor, v, idExcluido));
+                v => ValidarCifUnico(empresaService, v, idExcluido));
 
             if (valor == null)
             {
@@ -350,7 +352,7 @@ public static class MenuEmpresas
                 continue;
             }
 
-            if (gestor.ExisteCif(valor, idExcluido))
+            if (empresaService.ExisteCif(valor, idExcluido))
             {
                 Console.WriteLine("Ese CIF ya está registrado por otra empresa.");
                 continue;
@@ -364,9 +366,8 @@ public static class MenuEmpresas
 
     private static ResultadoOperacion Baja(
         Consola consola,
-        GestorEmpresas gestor,
-        GestorPersonas gestorPersonas,
-        GestorRelaciones gestorRelaciones)
+        EmpresaService empresaService,
+        PersonaService personaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- BAJA DE EMPRESA ---");
@@ -374,7 +375,7 @@ public static class MenuEmpresas
         var resultadoLocalizar = LocalizarRegistro.Ejecutar(
             consola,
             "Nombre comercial o CIF: ",
-            t => gestor.BuscarPorTexto(t),
+            t => empresaService.BuscarEmpresasPorTexto(t),
             Presentacion.EmpresaTexto,
             "No se ha encontrado ninguna empresa con ese nombre o CIF.");
 
@@ -397,14 +398,12 @@ public static class MenuEmpresas
         switch (consola.ConfirmarCancelable("¿Eliminar definitivamente? (s/n): "))
         {
             case Confirmacion.Si:
-                int personasVinculadas = gestorRelaciones.PersonasDe(empresa.IdEmpresa).Count;
-
-                if (personasVinculadas > 0)
+                if (empresaService.TienePersonas(empresa.IdEmpresa))
                 {
-                    return BajaConPlantilla(consola, gestor, gestorPersonas, gestorRelaciones, empresa, personasVinculadas);
+                    return BajaConPlantilla(consola, empresaService, personaService, empresa);
                 }
 
-                gestor.Eliminar(empresa.IdEmpresa);
+                empresaService.EliminarEmpresa(empresa.IdEmpresa);
                 Console.WriteLine("Empresa eliminada.");
                 return ResultadoOperacion.Continuar;
 
@@ -420,12 +419,11 @@ public static class MenuEmpresas
 
     private static ResultadoOperacion BajaConPlantilla(
         Consola consola,
-        GestorEmpresas gestor,
-        GestorPersonas gestorPersonas,
-        GestorRelaciones gestorRelaciones,
-        Empresa empresa,
-        int personasVinculadas)
+        EmpresaService empresaService,
+        PersonaService personaService,
+        Empresa empresa)
     {
+        int personasVinculadas = empresaService.ObtenerPersonasVinculadas(empresa.IdEmpresa).Count;
         string textoPersonas = personasVinculadas == 1 ? "persona relacionada" : "personas relacionadas";
 
         Console.WriteLine();
@@ -454,17 +452,7 @@ public static class MenuEmpresas
             $"¿Desvincular a las {personasVinculadas} {textoPersonas} y borrar la empresa? (s/n): "))
         {
             case Confirmacion.Si:
-                foreach (int idPersona in gestorRelaciones.PersonasDe(empresa.IdEmpresa))
-                {
-                    Persona? persona = gestorPersonas.BuscarPorId(idPersona);
-                    if (persona != null)
-                    {
-                        persona.EmpresaAsignada = string.Empty;
-                    }
-                }
-
-                gestorRelaciones.DesvincularTodas(empresa.IdEmpresa);
-                gestor.Eliminar(empresa.IdEmpresa);
+                empresaService.EliminarEmpresaConDesvinculacion(empresa.IdEmpresa);
                 Console.WriteLine($"Empresa '{empresa.NombreComercial}' eliminada tras desvincular a sus {personasVinculadas} {textoPersonas}.");
                 return ResultadoOperacion.Continuar;
 
@@ -480,9 +468,8 @@ public static class MenuEmpresas
 
     private static ResultadoOperacion VerPersonas(
         Consola consola,
-        GestorEmpresas gestor,
-        GestorPersonas gestorPersonas,
-        GestorRelaciones gestorRelaciones)
+        EmpresaService empresaService,
+        PersonaService personaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- PERSONAS DE LA EMPRESA ---");
@@ -490,7 +477,7 @@ public static class MenuEmpresas
         var resultadoLocalizar = LocalizarRegistro.Ejecutar(
             consola,
             "Nombre comercial o CIF: ",
-            t => gestor.BuscarPorTexto(t),
+            t => empresaService.BuscarEmpresasPorTexto(t),
             Presentacion.EmpresaTexto,
             "No se ha encontrado ninguna empresa con ese nombre o CIF.");
 
@@ -507,24 +494,20 @@ public static class MenuEmpresas
 
         Empresa? empresa = resultadoLocalizar.Registro!;
 
-        List<int> idsPlantilla = gestorRelaciones.PersonasDe(empresa.IdEmpresa);
-
         Console.WriteLine($"Empresa: {Presentacion.EmpresaTexto(empresa)}");
 
-        if (idsPlantilla.Count == 0)
+        List<Persona> plantilla = empresaService.VerPlantilla(empresa.IdEmpresa);
+
+        if (plantilla.Count == 0)
         {
             Console.WriteLine("Esta empresa no tiene personas asignadas.");
             return ResultadoOperacion.Continuar;
         }
 
-        List<Persona> plantilla = gestorPersonas.Listar()
-            .Where(p => idsPlantilla.Contains(p.IdPersona))
-            .ToList();
-
         Console.WriteLine($"Personas asociadas ({plantilla.Count}):");
         foreach (Persona persona in plantilla)
         {
-            Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestor));
+            Console.WriteLine(Presentacion.PersonaTexto(persona));
         }
 
         return ResultadoOperacion.Continuar;

@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using AgendaProfesional.UI;
 
-namespace AgendaProfesional.Ayudas;
+namespace AgendaProfesional.UI.Ayudas;
 
 public static class LocalizarRegistro
 {

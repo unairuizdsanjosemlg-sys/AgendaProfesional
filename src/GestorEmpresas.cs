@@ -1,4 +1,7 @@
-using AgendaProfesional.Ayudas;
+using AgendaProfesional.UI.Ayudas;
+using AgendaProfesional.Models;
+using AgendaProfesional.UI;
+using AgendaProfesional.Services.Shared;
 
 namespace AgendaProfesional;
 

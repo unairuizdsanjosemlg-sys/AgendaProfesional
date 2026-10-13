@@ -48,7 +48,8 @@ campo vacío; SHALL validar el formato del CIF y exigir que ninguna otra empresa
 catálogo tenga ya ese CIF; SHALL asignar un `IdEmpresa` autogenerado e incremental no
 editable por el usuario; SHALL mostrar un resumen de los datos introducidos y pedir
 confirmación antes de guardar; y al confirmar SHALL crear la empresa informando del
-`IdEmpresa` asignado.
+`IdEmpresa` asignado. **La operación se ejecuta a través de `EmpresaService.Alta()` que
+usa el repositorio interno de empresas.**
 
 #### Scenario: Alta válida
 - **WHEN** el usuario introduce todos los datos en formato válido, sin duplicar ningún CIF,
@@ -97,7 +98,8 @@ confirmación antes de guardar; y al confirmar SHALL crear la empresa informando
 El sistema SHALL mostrar el listado de empresas ordenado por `NombreComercial` sin
 distinguir mayúsculas/minúsculas, con un formato alineado y legible en consola que incluya
 el `IdEmpresa` de cada registro, e SHALL indicar explícitamente cuando no haya empresas
-registradas en lugar de mostrar una lista vacía.
+registradas en lugar de mostrar una lista vacía. **La UI obtiene la lista mediante
+`EmpresaService.Listar()`.**
 
 #### Scenario: Listado con empresas registradas
 - **WHEN** hay empresas registradas
@@ -113,7 +115,8 @@ una subcadena del `NombreComercial` (sin distinguir acentos ni mayúsculas/minú
 lo tecleado como lo almacenado) o cuando coincide exactamente con su `CIF` (sin distinguir
 mayúsculas/minúsculas). La búsqueda SHALL mostrar todas las coincidencias con sus datos y
 `IdEmpresa`, y SHALL informar explícitamente cuando no haya ninguna. El `IdEmpresa` no
-SHALL pedirse nunca como dato de búsqueda.
+SHALL pedirse nunca como dato de búsqueda. **La búsqueda se realiza mediante
+`EmpresaService.BuscarPorTexto()`.**
 
 #### Scenario: Coincidencia por subcadena del nombre
 - **WHEN** el usuario teclea un fragmento del NombreComercial, sin acentos y en minúsculas
@@ -170,7 +173,8 @@ datos actuales antes de preguntar por los cambios; SHALL pedir cada campo por tu
 cuando la respuesta es vacía y revalidando el valor nuevo con las mismas reglas del alta,
 incluida la unicidad del CIF; SHALL informar que no hay cambios cuando todos los campos se
 dejen vacíos; y SHALL mostrar un resumen de los campos que van a cambiar junto a la empresa
-afectada y exigir confirmación explícita (s/n) antes de guardar.
+afectada y exigir confirmación explícita (s/n) antes de guardar. **La operación se ejecuta
+a través de `EmpresaService.Modificar()`.**
 
 #### Scenario: Modificar empresa existente
 - **WHEN** el usuario localiza una empresa existente, escribe al menos un campo nuevo y
@@ -209,7 +213,9 @@ el número de personas afectadas y SHALL ofrecer dos opciones: cancelar el borra
 desvincular a todas las personas para proceder al borrado. Si elige desvincular, SHALL exigir
 confirmación explícita (s/n) y, al confirmar, SHALL desvincular a todas esas personas
 (vaciando también su texto `Empresa asignada`) y borrar la empresa en el mismo acto. La
-palabra `cancelar` SHALL abortar la operación sin cambios y volver al menú principal.
+palabra `cancelar` SHALL abortar la operación sin cambios y volver al menú principal. **La
+operación se ejecuta a través de `EmpresaService.Eliminar()` que coordina con
+`GestorRelaciones` y `PersonaService` para desvincular personas.**
 
 #### Scenario: Baja confirmada
 - **WHEN** el usuario localiza una empresa sin personas asociadas y confirma la eliminación

@@ -1,4 +1,4 @@
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public enum ResultadoOperacion
 {

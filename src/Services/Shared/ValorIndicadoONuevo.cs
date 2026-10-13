@@ -1,4 +1,4 @@
-namespace AgendaProfesional.Ayudas;
+namespace AgendaProfesional.Services.Shared;
 
 public static class ValorIndicadoONuevo
 {

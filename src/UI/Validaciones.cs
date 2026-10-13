@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public static class Validaciones
 {

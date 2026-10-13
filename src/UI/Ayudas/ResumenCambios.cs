@@ -1,4 +1,4 @@
-namespace AgendaProfesional.Ayudas;
+namespace AgendaProfesional.UI.Ayudas;
 
 public static class ResumenCambios
 {

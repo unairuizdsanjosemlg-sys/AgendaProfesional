@@ -11,12 +11,15 @@ personas vinculadas.
 
 ### Requirement: Relación persona-empresa por identificadores
 El sistema SHALL mantener una relación interna entre personas y empresas almacenada como
-pares de identificadores (`IdPersona`, `IdEmpresa`) en un array. Una persona SHALL poder no
-tener empresa asignada o tener exactamente una; una empresa SHALL poder tener de cero a
-muchas personas. El usuario SHALL operar siempre con nombres de empresa, y el sistema SHALL
-guardar, sustituir y consultar la relación mediante los identificadores. Cuando en una alta
-o una modificación de persona se introduzca el nombre de una empresa existente, el sistema
-SHALL registrar o sustituir la relación con los identificadores de la persona y la empresa.
+pares de identificadores (`IdPersona`, `IdEmpresa`) en un array (gestionado por
+`GestorRelaciones`). Una persona SHALL poder no tener empresa asignada o tener exactamente
+una; una empresa SHALL poder tener de cero a muchas personas. El usuario SHALL operar siempre
+con nombres de empresa, y el sistema SHALL guardar, sustituir y consultar la relación
+mediante los identificadores. Cuando en una alta o una modificación de persona se introduzca
+el nombre de una empresa existente, el sistema SHALL registrar o sustituir la relación con
+los identificadores de la persona y la empresa. **`GestorRelaciones` se mantiene como
+componente interno usado por `PersonaService` y `EmpresaService`; la UI no accede
+directamente a él.**
 
 #### Scenario: Asignación guardada por identificadores
 - **WHEN** el usuario asigna una empresa existente a una persona
@@ -39,6 +42,7 @@ SHALL registrar o sustituir la relación con los identificadores de la persona y
 - **THEN** el sistema sustituye la relación por la de la nueva empresa y actualiza el texto de empresa de la persona
 
 ### Requirement: Asignar o cambiar empresa desde el menú de personas
+
 El sistema SHALL ofrecer en el submenu de personas la operación para asignar o cambiar la
 empresa de una persona. La persona SHALL localizarse por nombre y apellidos con las mismas
 reglas de búsqueda y desambiguación que el resto de operaciones de personas. A continuación
@@ -48,7 +52,9 @@ coincidencia tolerante (subcadena, sin distinguir acentos ni mayúsculas/minúsc
 con sus `IdEmpresa` y pedir el número elegido, y sin ninguna SHALL informarlo y volver al
 submenu sin cambiar nada. Antes de aplicar el cambio, el sistema SHALL mostrar la persona y
 la empresa elegida y SHALL exigir confirmación explícita (s/n). La palabra `cancelar` en
-cualquier pregunta SHALL abortar la operación sin guardar y volver al menú principal.
+cualquier pregunta SHALL abortar la operación sin guardar y volver al menú principal. **La
+operación se ejecuta mediante `PersonaService.AsignarEmpresa()` que coordina la búsqueda de
+la empresa y el registro en `GestorRelaciones`.**
 
 #### Scenario: Asignación a persona sin empresa
 - **WHEN** el usuario localiza una persona sin empresa, elige una empresa existente y confirma
@@ -56,7 +62,7 @@ cualquier pregunta SHALL abortar la operación sin guardar y volver al menú pri
 
 #### Scenario: Cambio de empresa
 - **WHEN** el usuario localiza una persona con empresa, elige otra empresa existente y confirma
-- **THEN** el sistema sustituye la relación por la nueva empresa
+- **THEN** el sistema sustituye la relación por la de la nueva empresa
 
 #### Scenario: Empresa sin coincidencias
 - **WHEN** el nombre de empresa introducido no coincide con ninguna empresa del catálogo
@@ -75,6 +81,7 @@ cualquier pregunta SHALL abortar la operación sin guardar y volver al menú pri
 - **THEN** el sistema no guarda ningún cambio y vuelve al menú principal
 
 ### Requirement: Desvincular persona de su empresa
+
 El sistema SHALL ofrecer en el submenu de personas la operación para desvincular a una
 persona de su empresa. La persona SHALL localizarse por nombre y apellidos con las mismas
 reglas del resto de operaciones. Si la persona no tiene empresa, el sistema SHALL informarlo
@@ -82,7 +89,9 @@ y volver al submenu sin error. Si la persona tiene empresa, el sistema SHALL mos
 persona con su empresa actual y SHALL exigir confirmación explícita (s/n); al confirmar, la
 relación SHALL eliminarse del array y el campo de texto `Empresa asignada` de la persona
 SHALL quedar vacío. Sin confirmación, la relación se conserva. La palabra `cancelar` en
-cualquier pregunta SHALL abortar la operación sin guardar y volver al menú principal.
+cualquier pregunta SHALL abortar la operación sin guardar y volver al menú principal. **La
+operación se ejecuta mediante `PersonaService.DesvincularEmpresa()` que elimina la entrada
+en `GestorRelaciones`.**
 
 #### Scenario: Desvinculación confirmada
 - **WHEN** el usuario localiza una persona con empresa y confirma la desvinculación
@@ -107,7 +116,8 @@ nombre de la empresa resuelto desde su `IdEmpresa` y, a continuación, ese `IdEm
 la persona no tenga relación, SHALL indicar explícitamente "Sin empresa". El nombre mostrado
 SHALL ser el vigente en el catálogo, de modo que un cambio de nombre de la empresa se refleje
 en todas las presentaciones. El campo de texto libre de la persona no SHALL presentarse como
-la empresa de la persona cuando exista relación.
+la empresa de la persona cuando exista relación. **La resolución del nombre se realiza
+mediante `PersonaService` / `EmpresaService` consultando `GestorRelaciones`.**
 
 #### Scenario: Persona con empresa
 - **WHEN** se presenta una persona que tiene empresa asignada
@@ -128,6 +138,8 @@ resto de operaciones del submenu. Con la empresa elegida, el sistema SHALL lista
 plantilla en el mismo formato legible que el listado de personas, mostrando cada persona con
 su `IdPersona` y su empresa. Si la empresa no tiene ninguna persona, SHALL informarlo
 explícitamente. La palabra `cancelar` SHALL abortar la operación y volver al menú principal.
+**La operación se ejecuta mediante `EmpresaService.VerPlantilla()` que coordina con
+`PersonaService` y `GestorRelaciones`.**
 
 #### Scenario: Empresa con plantilla
 - **WHEN** el usuario elige una empresa que tiene personas asociadas
@@ -155,7 +167,9 @@ proceder al borrado. Si elige cancelar, no SHALL cambiar nada y SHALL volver al 
 elige desvincular, el sistema SHALL exigir confirmación explícita (s/n) antes de actuar; al
 confirmar SHALL desvincular a todas las personas de esa empresa (vaciando también su texto
 `Empresa asignada`) y SHALL borrar la empresa en el mismo acto, informando del resultado. La
-palabra `cancelar` SHALL abortar la operación sin cambios y volver al menú principal.
+palabra `cancelar` SHALL abortar la operación sin cambios y volver al menú principal. **La
+operación se ejecuta mediante `EmpresaService.Eliminar()` que coordina la desvinculación
+masiva vía `GestorRelaciones` y `PersonaService`.**
 
 #### Scenario: Borrado bloqueado por plantilla
 - **WHEN** el usuario confirma la baja de una empresa que tiene personas asociadas

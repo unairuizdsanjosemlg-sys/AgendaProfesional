@@ -1,14 +1,14 @@
-using AgendaProfesional;
+using AgendaProfesional.Services;
+using AgendaProfesional.UI;
 
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public static class MenuPrincipal
 {
     public static void Ejecutar(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         bool salir = false;
 
@@ -32,7 +32,7 @@ public static class MenuPrincipal
             switch (opcion)
             {
                 case 1:
-                    var resultadoPersonas = MenuPersonas.Ejecutar(consola, gestorPersonas, gestorEmpresas, gestorRelaciones);
+                    var resultadoPersonas = MenuPersonas.Ejecutar(consola, personaService, empresaService);
                     if (resultadoPersonas == ResultadoOperacion.VolverAlMenuPrincipal && consola.EntradaAgotada)
                     {
                         Console.WriteLine("Hasta pronto.");
@@ -40,7 +40,7 @@ public static class MenuPrincipal
                     }
                     break;
                 case 2:
-                    var resultadoEmpresas = MenuEmpresas.Ejecutar(consola, gestorEmpresas, gestorPersonas, gestorRelaciones);
+                    var resultadoEmpresas = MenuEmpresas.Ejecutar(consola, empresaService, personaService);
                     if (resultadoEmpresas == ResultadoOperacion.VolverAlMenuPrincipal && consola.EntradaAgotada)
                     {
                         Console.WriteLine("Hasta pronto.");

@@ -1,4 +1,4 @@
-namespace AgendaProfesional;
+namespace AgendaProfesional.Models;
 
 public readonly record struct RelacionAsignacion(int IdPersona, int IdEmpresa);
 

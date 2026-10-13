@@ -1,4 +1,4 @@
-namespace AgendaProfesional;
+namespace AgendaProfesional.Models;
 
 public class Empresa
 {

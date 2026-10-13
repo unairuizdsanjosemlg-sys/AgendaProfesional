@@ -63,7 +63,9 @@ empresa; cuando la empresa asignada se rellene, SHALL corresponder al nombre de 
 existente del catálogo (con la misma coincidencia tolerante y desambiguación que la búsqueda
 de empresas), repreguntando el campo con un aviso mientras no sea así o hasta que se deje en
 blanco; SHALL asignar un `IdPersona` autogenerado e incremental no editable por el usuario;
-y SHALL confirmar el alta al usuario.
+y SHALL confirmar el alta al usuario. **La operación se ejecuta a través de `PersonaService`
+que coordina internamente el repositorio de personas y `GestorRelaciones`; la UI no accede
+directamente al gestor.**
 
 #### Scenario: Alta válida
 - **WHEN** el usuario introduce todos los datos obligatorios en formato válido y confirma
@@ -86,7 +88,7 @@ y SHALL confirmar el alta al usuario.
 ### Requirement: Listado de personas
 El sistema SHALL mostrar el listado de las personas registradas en orden legible y SHALL
 indicar explícitamente cuando no hay personas registradas en lugar de mostrar una lista
-vacía.
+vacía. **La UI obtiene la lista mediante `PersonaService.Listar()`.**
 
 #### Scenario: Listado con personas registradas
 - **WHEN** hay personas registradas
@@ -104,7 +106,8 @@ valor actual cuando la respuesta es vacía y modificando únicamente los campos 
 no vacía; SHALL informar y volver al menú sin error cuando no hay ninguna coincidencia o
 cuando el usuario no elige entre varios candidatos; SHALL informar que no hay cambios cuando
 todos los campos se dejan vacíos; y SHALL mostrar un resumen de los campos que van a cambiar
-y exigir confirmación explícita (s/n) antes de guardar.
+y exigir confirmación explícita (s/n) antes de guardar. **La operación se ejecuta a través
+de `PersonaService.Modificar()`.**
 
 #### Scenario: Modificar persona existente
 - **WHEN** el usuario localiza por nombre y apellidos una persona existente, escribe al menos
@@ -133,7 +136,8 @@ mostrar el registro afectado, incluido su `IdPersona`; y SHALL exigir confirmaci
 (s/n) antes de eliminar. Al confirmar, el sistema SHALL eliminar también la entrada de
 relación persona-empresa de esa persona si existe, de modo que no queden referencias
 huérfanas. Cuando no haya coincidencia, SHALL informarlo sin error ni cierre inesperado y
-volver al menú.
+volver al menú. **La operación se ejecuta a través de `PersonaService.Eliminar()` que
+coordina con `GestorRelaciones`.**
 
 #### Scenario: Baja confirmada
 - **WHEN** el usuario localiza por nombre y apellidos una persona existente y confirma la eliminación
@@ -223,7 +227,9 @@ preguntar únicamente ese campo. En la modificación, una empresa asignada vací
 conservar el valor actual (y su relación) en lugar de dejarlo en blanco, y una empresa no
 vacía SHALL seguir las mismas reglas de existencia y desambiguación que en el alta,
 sustituyendo la relación existente al validarse. Para quitar la empresa de una persona, el
-usuario SHALL usar la operación "Desvincular empresa" del submenu de personas.
+usuario SHALL usar la operación "Desvincular empresa" del submenu de personas. **La
+asignación/desvinculación se realiza mediante `PersonaService.AsignarEmpresa` y
+`PersonaService.DesvincularEmpresa` que coordinan con `GestorRelaciones`.**
 
 #### Scenario: Empresa obligatoria en el alta
 - **WHEN** el usuario rellena el campo de empresa en el alta
@@ -262,6 +268,7 @@ separadas. La coincidencia SHALL ser parcial (subcadena), SHALL ignorar mayúscu
 y SHALL ignorar acentos tanto en lo tecleado como en lo almacenado. Una persona SHALL
 coincidir solo cuando el nombre **y** los apellidos coincidan (condición AND). La búsqueda
 SHALL mostrar todas las coincidencias y SHALL informar explícitamente cuando no haya ninguna.
+**La búsqueda se realiza mediante `PersonaService.BuscarPorNombre()`.**
 
 #### Scenario: Coincidencia por subcadena
 - **WHEN** el usuario introduce un fragmento del nombre y un fragmento de los apellidos que
@@ -275,7 +282,7 @@ SHALL mostrar todas las coincidencias y SHALL informar explícitamente cuando no
 
 #### Scenario: Coincidencia sin distinguir mayúsculas
 - **WHEN** el usuario escribe el nombre y los apellidos en minúsculas y la persona registrada los
-  tiene en mayúsculas o con mayúscula inicial
+  tienen en mayúsculas o con mayúscula inicial
 - **THEN** el sistema la incluye entre las coincidencias
 
 #### Scenario: Una coincidencia exige ambos campos

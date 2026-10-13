@@ -1,14 +1,16 @@
-using AgendaProfesional.Ayudas;
+using AgendaProfesional.UI.Ayudas;
+using AgendaProfesional.Models;
+using AgendaProfesional.Services;
+using AgendaProfesional.UI;
 
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public static class MenuPersonas
 {
     public static ResultadoOperacion Ejecutar(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         while (!consola.EntradaAgotada)
         {
@@ -33,13 +35,13 @@ public static class MenuPersonas
 
             ResultadoOperacion resultado = opcion switch
             {
-                1 => AltaPersona(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                2 => Listado(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                3 => Busqueda(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                4 => Modificar(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                5 => Baja(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                6 => AsignarEmpresa(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
-                7 => DesvincularEmpresa(consola, gestorPersonas, gestorEmpresas, gestorRelaciones),
+                1 => AltaPersona(consola, personaService, empresaService),
+                2 => Listado(consola, personaService, empresaService),
+                3 => Busqueda(consola, personaService, empresaService),
+                4 => Modificar(consola, personaService, empresaService),
+                5 => Baja(consola, personaService, empresaService),
+                6 => AsignarEmpresa(consola, personaService, empresaService),
+                7 => DesvincularEmpresa(consola, personaService, empresaService),
                 8 => ResultadoOperacion.VolverAlMenuPrincipal,
                 _ => ResultadoOperacion.Continuar
             };
@@ -67,7 +69,7 @@ public static class MenuPersonas
     private static bool LeerCamposPersona(
         Consola consola,
         bool esModificacion,
-        GestorEmpresas gestorEmpresas,
+        EmpresaService empresaService,
         out PersonaDatos datos,
         out Empresa? empresaElegida)
     {
@@ -90,7 +92,7 @@ public static class MenuPersonas
             valores[i] = valor;
         }
 
-        empresaElegida = LeerEmpresaOpcional(consola, gestorEmpresas, out bool cancelado);
+        empresaElegida = LeerEmpresaOpcional(consola, empresaService, out bool cancelado);
         if (cancelado)
         {
             datos = new PersonaDatos(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
@@ -103,7 +105,7 @@ public static class MenuPersonas
         return true;
     }
 
-    private static Empresa? LeerEmpresaOpcional(Consola consola, GestorEmpresas gestorEmpresas, out bool cancelado)
+    private static Empresa? LeerEmpresaOpcional(Consola consola, EmpresaService empresaService, out bool cancelado)
     {
         cancelado = false;
 
@@ -125,7 +127,7 @@ public static class MenuPersonas
             var resultado = LocalizarRegistro.Ejecutar(
                 consola,
                 "Empresa asignada: ",
-                t => gestorEmpresas.BuscarPorTexto(t),
+                t => empresaService.BuscarEmpresasPorTexto(t),
                 Presentacion.EmpresaTexto,
                 "No se ha encontrado ninguna empresa con ese nombre.");
 
@@ -147,14 +149,14 @@ public static class MenuPersonas
         return null;
     }
 
-    private static Empresa? PedirEmpresa(Consola consola, GestorEmpresas gestorEmpresas, out bool cancelado)
+    private static Empresa? PedirEmpresa(Consola consola, EmpresaService empresaService, out bool cancelado)
     {
         cancelado = false;
 
         var resultado = LocalizarRegistro.Ejecutar(
             consola,
             "Nombre de la empresa: ",
-            t => gestorEmpresas.BuscarPorTexto(t),
+            t => empresaService.BuscarEmpresasPorTexto(t),
             Presentacion.EmpresaTexto,
             "No se ha encontrado ninguna empresa con ese nombre o CIF.");
 
@@ -174,9 +176,8 @@ public static class MenuPersonas
 
     private static ResultadoOperacion AltaPersona(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- ALTA DE PERSONA ---");
@@ -185,17 +186,17 @@ public static class MenuPersonas
         Console.WriteLine($"Escribe '{Consola.PalabraCancelar}' para volver al menú.");
         Console.WriteLine();
 
-        if (!LeerCamposPersona(consola, esModificacion: false, gestorEmpresas, out PersonaDatos datos, out Empresa? empresaElegida))
+        if (!LeerCamposPersona(consola, esModificacion: false, empresaService, out PersonaDatos datos, out Empresa? empresaElegida))
         {
             Console.WriteLine("Alta cancelada.");
             return ResultadoOperacion.VolverAlMenuPrincipal;
         }
 
-        Persona persona = gestorPersonas.AltaPersona(datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
+        Persona persona = personaService.AltaPersona(datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
 
         if (empresaElegida != null)
         {
-            gestorRelaciones.Asignar(persona.IdPersona, empresaElegida.IdEmpresa);
+            personaService.AsignarEmpresa(persona.IdPersona, empresaElegida.NombreComercial);
         }
 
         Console.WriteLine($"Alta confirmada. Id asignado: {persona.IdPersona}.");
@@ -204,14 +205,13 @@ public static class MenuPersonas
 
     private static ResultadoOperacion Listado(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- LISTADO DE PERSONAS ---");
 
-        List<Persona> personas = gestorPersonas.Listar();
+        List<Persona> personas = personaService.ListarPersonas();
         if (personas.Count == 0)
         {
             Console.WriteLine("No hay personas registradas en la agenda.");
@@ -220,13 +220,13 @@ public static class MenuPersonas
 
         foreach (Persona persona in personas)
         {
-            Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas));
+            Console.WriteLine(Presentacion.PersonaTexto(persona));
         }
 
         return ResultadoOperacion.Continuar;
     }
 
-    private static List<Persona>? PedirCoincidencias(Consola consola, GestorPersonas gestorPersonas)
+    private static List<Persona>? PedirCoincidencias(Consola consola, PersonaService personaService)
     {
         string? nombre = consola.LeerCampoObligatorio("Nombre: ", Validaciones.ValidarTexto);
         if (nombre == null)
@@ -240,19 +240,18 @@ public static class MenuPersonas
             return null;
         }
 
-        return gestorPersonas.BuscarPorNombre(nombre, apellidos);
+        return personaService.BuscarPersonasPorNombre(nombre, apellidos);
     }
 
     private static Persona? LocalizarPersona(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones,
+        PersonaService personaService,
+        EmpresaService empresaService,
         out bool cancelado)
     {
         cancelado = false;
 
-        List<Persona>? coincidencias = PedirCoincidencias(consola, gestorPersonas);
+        List<Persona>? coincidencias = PedirCoincidencias(consola, personaService);
         if (coincidencias == null)
         {
             cancelado = true;
@@ -274,7 +273,7 @@ public static class MenuPersonas
         Console.WriteLine("Hay varias personas con ese nombre y apellidos. Elige una:");
         for (int i = 0; i < coincidencias.Count; i++)
         {
-            Console.WriteLine($"  {i + 1}. {Presentacion.PersonaTexto(coincidencias[i], gestorRelaciones, gestorEmpresas)}");
+            Console.WriteLine($"  {i + 1}. {Presentacion.PersonaTexto(coincidencias[i])}");
         }
 
         int? numero = consola.LeerNumeroCancelable(
@@ -292,9 +291,8 @@ public static class MenuPersonas
 
     private static ResultadoOperacion Busqueda(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- BÚSQUEDA DE PERSONAS ---");
@@ -302,7 +300,7 @@ public static class MenuPersonas
         Console.WriteLine($"Escribe '{Consola.PalabraCancelar}' para volver al menú.");
         Console.WriteLine();
 
-        List<Persona>? resultados = PedirCoincidencias(consola, gestorPersonas);
+        List<Persona>? resultados = PedirCoincidencias(consola, personaService);
         if (resultados == null)
         {
             Console.WriteLine("Búsqueda cancelada.");
@@ -318,7 +316,7 @@ public static class MenuPersonas
         Console.WriteLine($"Coincidencias encontradas ({resultados.Count}):");
         foreach (Persona persona in resultados)
         {
-            Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas));
+            Console.WriteLine(Presentacion.PersonaTexto(persona));
         }
 
         return ResultadoOperacion.Continuar;
@@ -326,14 +324,13 @@ public static class MenuPersonas
 
     private static ResultadoOperacion Modificar(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- MODIFICAR PERSONA ---");
 
-        Persona? persona = LocalizarPersona(consola, gestorPersonas, gestorEmpresas, gestorRelaciones, out bool cancelado);
+        Persona? persona = LocalizarPersona(consola, personaService, empresaService, out bool cancelado);
         if (cancelado)
         {
             return ResultadoOperacion.VolverAlMenuPrincipal;
@@ -345,12 +342,12 @@ public static class MenuPersonas
         }
 
         Console.WriteLine("Datos actuales:");
-        Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas));
+        Console.WriteLine(Presentacion.PersonaTexto(persona));
         Console.WriteLine($"Escribe '{Consola.PalabraCancelar}' para volver al menú; " +
                           "un campo en blanco conserva su valor actual.");
         Console.WriteLine();
 
-        if (!LeerCamposPersona(consola, esModificacion: true, gestorEmpresas, out PersonaDatos datos, out Empresa? empresaElegida))
+        if (!LeerCamposPersona(consola, esModificacion: true, empresaService, out PersonaDatos datos, out Empresa? empresaElegida))
         {
             Console.WriteLine("Modificación cancelada.");
             return ResultadoOperacion.VolverAlMenuPrincipal;
@@ -364,17 +361,17 @@ public static class MenuPersonas
 
         Console.WriteLine();
         Console.WriteLine("Resumen de cambios:");
-        MostrarResumen(persona, datos, gestorEmpresas, gestorRelaciones);
+        MostrarResumen(persona, datos, empresaService);
 
         switch (consola.ConfirmarCancelable("¿Guardar los cambios? (s/n): "))
         {
             case Confirmacion.Si:
-                bool modificado = gestorPersonas.Modificar(
+                bool modificado = personaService.ModificarPersona(
                     persona.IdPersona, datos.Nombre, datos.Apellidos, datos.Telefono, datos.Correo, datos.EmpresaAsignada);
 
                 if (empresaElegida != null)
                 {
-                    gestorRelaciones.Asignar(persona.IdPersona, empresaElegida.IdEmpresa);
+                    personaService.AsignarEmpresa(persona.IdPersona, empresaElegida.NombreComercial);
                 }
 
                 Console.WriteLine(modificado ? "Persona modificada correctamente." : "No se pudo modificar la persona.");
@@ -393,8 +390,7 @@ public static class MenuPersonas
     private static void MostrarResumen(
         Persona persona,
         PersonaDatos datos,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        EmpresaService empresaService)
     {
         (string Etiqueta, string Actual, string Nuevo)[] cambios =
         [
@@ -402,7 +398,7 @@ public static class MenuPersonas
             ("Apellidos", persona.Apellidos, datos.Apellidos),
             ("Teléfono", persona.Telefono, datos.Telefono),
             ("Correo", persona.Correo, datos.Correo),
-            ("Empresa asignada", Presentacion.EmpresaDePersona(persona, gestorRelaciones, gestorEmpresas), datos.EmpresaAsignada)
+            ("Empresa asignada", Presentacion.EmpresaDePersona(persona), datos.EmpresaAsignada)
         ];
 
         ResumenCambios.Mostrar(cambios);
@@ -410,14 +406,13 @@ public static class MenuPersonas
 
     private static ResultadoOperacion Baja(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- BAJA DE PERSONA ---");
 
-        Persona? persona = LocalizarPersona(consola, gestorPersonas, gestorEmpresas, gestorRelaciones, out bool cancelado);
+        Persona? persona = LocalizarPersona(consola, personaService, empresaService, out bool cancelado);
         if (cancelado)
         {
             return ResultadoOperacion.VolverAlMenuPrincipal;
@@ -429,13 +424,12 @@ public static class MenuPersonas
         }
 
         Console.WriteLine("Registro afectado:");
-        Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas));
+        Console.WriteLine(Presentacion.PersonaTexto(persona));
 
         switch (consola.ConfirmarCancelable("¿Eliminar definitivamente? (s/n): "))
         {
             case Confirmacion.Si:
-                gestorRelaciones.EliminarRelacionesDe(persona.IdPersona);
-                gestorPersonas.Eliminar(persona.IdPersona);
+                personaService.EliminarPersona(persona.IdPersona);
                 Console.WriteLine("Persona eliminada.");
                 return ResultadoOperacion.Continuar;
 
@@ -451,14 +445,13 @@ public static class MenuPersonas
 
     private static ResultadoOperacion AsignarEmpresa(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- ASIGNAR/CAMBIAR EMPRESA ---");
 
-        Persona? persona = LocalizarPersona(consola, gestorPersonas, gestorEmpresas, gestorRelaciones, out bool cancelado);
+        Persona? persona = LocalizarPersona(consola, personaService, empresaService, out bool cancelado);
         if (cancelado)
         {
             Console.WriteLine("Operación cancelada.");
@@ -470,7 +463,7 @@ public static class MenuPersonas
             return ResultadoOperacion.Continuar;
         }
 
-        Empresa? empresa = PedirEmpresa(consola, gestorEmpresas, out cancelado);
+        Empresa? empresa = PedirEmpresa(consola, empresaService, out cancelado);
         if (cancelado)
         {
             Console.WriteLine("Operación cancelada.");
@@ -485,15 +478,14 @@ public static class MenuPersonas
 
         Console.WriteLine();
         Console.WriteLine("Resumen de la asignación:");
-        Console.WriteLine($"  Persona: {Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas)}");
+        Console.WriteLine($"  Persona: {Presentacion.PersonaTexto(persona)}");
         Console.WriteLine($"  Empresa: {Presentacion.EmpresaTexto(empresa)}");
         Console.WriteLine();
 
         switch (consola.ConfirmarCancelable("¿Guardar la asignación? (s/n): "))
         {
             case Confirmacion.Si:
-                gestorRelaciones.Asignar(persona.IdPersona, empresa.IdEmpresa);
-                persona.EmpresaAsignada = empresa.NombreComercial;
+                personaService.AsignarEmpresa(persona.IdPersona, empresa.NombreComercial);
                 Console.WriteLine($"Persona asignada a la empresa '{empresa.NombreComercial}'.");
                 return ResultadoOperacion.Continuar;
 
@@ -509,14 +501,13 @@ public static class MenuPersonas
 
     private static ResultadoOperacion DesvincularEmpresa(
         Consola consola,
-        GestorPersonas gestorPersonas,
-        GestorEmpresas gestorEmpresas,
-        GestorRelaciones gestorRelaciones)
+        PersonaService personaService,
+        EmpresaService empresaService)
     {
         Console.WriteLine();
         Console.WriteLine("--- DESVINCULAR EMPRESA ---");
 
-        Persona? persona = LocalizarPersona(consola, gestorPersonas, gestorEmpresas, gestorRelaciones, out bool cancelado);
+        Persona? persona = LocalizarPersona(consola, personaService, empresaService, out bool cancelado);
         if (cancelado)
         {
             Console.WriteLine("Operación cancelada.");
@@ -528,21 +519,23 @@ public static class MenuPersonas
             return ResultadoOperacion.Continuar;
         }
 
-        if (gestorRelaciones.IdEmpresaDe(persona.IdPersona) == null)
-        {
-            Console.WriteLine("Esa persona no tiene empresa asignada.");
-            return ResultadoOperacion.Continuar;
-        }
-
+        // We need to check if the person has a company - we'll use a temporary GestorRelaciones for display
+        // The actual check will be done in the service
         Console.WriteLine("Persona afectada:");
-        Console.WriteLine(Presentacion.PersonaTexto(persona, gestorRelaciones, gestorEmpresas));
+        Console.WriteLine(Presentacion.PersonaTexto(persona));
 
         switch (consola.ConfirmarCancelable("¿Desvincular a la persona de su empresa? (s/n): "))
         {
             case Confirmacion.Si:
-                gestorRelaciones.Desvincular(persona.IdPersona);
-                persona.EmpresaAsignada = string.Empty;
-                Console.WriteLine("Persona desvinculada de su empresa.");
+                bool result = personaService.DesvincularEmpresa(persona.IdPersona);
+                if (result)
+                {
+                    Console.WriteLine("Persona desvinculada de su empresa.");
+                }
+                else
+                {
+                    Console.WriteLine("Esa persona no tiene empresa asignada.");
+                }
                 return ResultadoOperacion.Continuar;
 
             case Confirmacion.No:

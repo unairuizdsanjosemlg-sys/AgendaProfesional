@@ -1,6 +1,6 @@
 using System;
 
-namespace AgendaProfesional;
+namespace AgendaProfesional.UI;
 
 public sealed class Consola
 {
