@@ -1,3 +1,5 @@
+using AgendaProfesional.Ayudas;
+
 namespace AgendaProfesional;
 
 public class GestorEmpresas
@@ -55,17 +57,17 @@ public class GestorEmpresas
             return false;
         }
 
-        string nuevoCif = ValorIndicadoONuevo(cif, empresa.CIF);
+        string nuevoCif = ValorIndicadoONuevo.Obtener(cif, empresa.CIF);
         if (!string.Equals(nuevoCif, empresa.CIF, StringComparison.OrdinalIgnoreCase) && ExisteCif(nuevoCif, id))
         {
             return false;
         }
 
-        empresa.NombreComercial = ValorIndicadoONuevo(nombreComercial, empresa.NombreComercial);
+        empresa.NombreComercial = ValorIndicadoONuevo.Obtener(nombreComercial, empresa.NombreComercial);
         empresa.CIF = nuevoCif;
-        empresa.Telefono = ValorIndicadoONuevo(telefono, empresa.Telefono);
-        empresa.CorreoElectronico = ValorIndicadoONuevo(correoElectronico, empresa.CorreoElectronico);
-        empresa.Direccion = ValorIndicadoONuevo(direccion, empresa.Direccion);
+        empresa.Telefono = ValorIndicadoONuevo.Obtener(telefono, empresa.Telefono);
+        empresa.CorreoElectronico = ValorIndicadoONuevo.Obtener(correoElectronico, empresa.CorreoElectronico);
+        empresa.Direccion = ValorIndicadoONuevo.Obtener(direccion, empresa.Direccion);
         return true;
     }
 
@@ -94,10 +96,5 @@ public class GestorEmpresas
     public Empresa? BuscarPorId(int id)
     {
         return _empresas.FirstOrDefault(e => e.IdEmpresa == id);
-    }
-
-    private static string ValorIndicadoONuevo(string? valorIndicado, string valorActual)
-    {
-        return string.IsNullOrWhiteSpace(valorIndicado) ? valorActual : valorIndicado.Trim();
     }
 }

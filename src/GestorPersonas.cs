@@ -1,3 +1,5 @@
+using AgendaProfesional.Ayudas;
+
 namespace AgendaProfesional;
 
 public class GestorPersonas
@@ -52,11 +54,11 @@ public class GestorPersonas
             return false;
         }
 
-        persona.Nombre = ValorIndicadoONuevo(nombre, persona.Nombre);
-        persona.Apellidos = ValorIndicadoONuevo(apellidos, persona.Apellidos);
-        persona.Telefono = ValorIndicadoONuevo(telefono, persona.Telefono);
-        persona.Correo = ValorIndicadoONuevo(correo, persona.Correo);
-        persona.EmpresaAsignada = ValorIndicadoONuevo(empresaAsignada, persona.EmpresaAsignada);
+        persona.Nombre = ValorIndicadoONuevo.Obtener(nombre, persona.Nombre);
+        persona.Apellidos = ValorIndicadoONuevo.Obtener(apellidos, persona.Apellidos);
+        persona.Telefono = ValorIndicadoONuevo.Obtener(telefono, persona.Telefono);
+        persona.Correo = ValorIndicadoONuevo.Obtener(correo, persona.Correo);
+        persona.EmpresaAsignada = ValorIndicadoONuevo.Obtener(empresaAsignada, persona.EmpresaAsignada);
         return true;
     }
 
@@ -75,10 +77,5 @@ public class GestorPersonas
     public Persona? BuscarPorId(int id)
     {
         return _personas.FirstOrDefault(p => p.IdPersona == id);
-    }
-
-    private static string ValorIndicadoONuevo(string? valorIndicado, string valorActual)
-    {
-        return string.IsNullOrWhiteSpace(valorIndicado) ? valorActual : valorIndicado.Trim();
     }
 }
